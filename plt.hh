@@ -16,7 +16,9 @@ namespace plt {
 	private:
 		double start, end;
 		friend class gnuplot;
-		
+
+		std::string get_plot_header();
+
 	public:
 		axis_range(double start, double end);
 		axis_range();
@@ -36,10 +38,13 @@ namespace plt {
 		FILE *macro_out;
 		char range_flag;
 		axis_range xr, yr;
+
+		std::string get_plot_header();
 		
 	public:
 		gnuplot();
 		gnuplot(FILE *macro_out);
+		void init(FILE *macro_out);
 
 		~gnuplot();
 		
@@ -57,7 +62,8 @@ namespace plt {
 		void unset_xrange();
 		void unset_yrange();
 
-		void plot_function(const std::string& f);
+		void plot_function(const std::string& func);
+		void plot_data(const std::string& fname);
 		
 		void set_title(const std::string& s);
 		void set_xlabel(const std::string& s);

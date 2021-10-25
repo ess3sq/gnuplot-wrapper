@@ -1,17 +1,20 @@
+#include <iostream>
 #include "plt.hh"
 
 // Gnu Plot class
 plt::gnuplot::gnuplot() {
-	this->p = popen("gnuplot", "w");
-   	this->range_flag = 0;
-	this->macro_out = nullptr;
+	init(nullptr);
 }
 
 plt::gnuplot::gnuplot(FILE *macro_out) {
+	init(macro_out);
+}
+
+void plt::gnuplot::init(FILE *macro_out) {
 	this->p = popen("gnuplot", "w");
    	this->range_flag = 0;
 	this->macro_out = macro_out;
-	
+
 }
 
 plt::gnuplot::~gnuplot() {
@@ -31,10 +34,11 @@ void plt::gnuplot::load_file(const std::string& fname) {
 
 void plt::gnuplot::flush() {
 	fflush(p);
+	if (macro_out) fflush(macro_out);
 }
 
-void plt::gnuplot::plot_function(const std::string& f) {
-	send_raw("plot "
+std::string plt::gnuplot::get_plot_header() {
+	return "plot "
 			 + (RANGE_X & range_flag ? "["
 				+ std::to_string(xr.start)
 				+ ":"
@@ -48,8 +52,16 @@ void plt::gnuplot::plot_function(const std::string& f) {
 				+ std::to_string(yr.end)
 				+ "] "
 				: "[] "
-			   )
-			 + f);
+				)
+		;
+}
+
+void plt::gnuplot::plot_function(const std::string& f) {
+	send_raw(get_plot_header() + f);
+}
+
+void plt::gnuplot::plot_data(const std::string& fname) {
+	send_raw(get_plot_header() + + "\"" + fname + "\"");
 }
 
 void plt::gnuplot::set_title(const std::string& s) {
@@ -72,7 +84,7 @@ void plt::gnuplot::set_output(const std::string& fname, const std::string& fmt, 
 	if (macro_out) {
 		fprintf(macro_out, "set terminal %s size %lu,%lu; set output \"%s\"\n",
 			fmt.c_str(), sz_x, sz_y, fname.c_str()
-		   );
+			);
 	}
 }
 
