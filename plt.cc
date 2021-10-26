@@ -14,7 +14,8 @@ void plt::gnuplot::init(FILE *macro_out) {
 	this->p = popen("gnuplot", "w");
    	this->range_flag = 0;
 	this->macro_out = macro_out;
-
+	this->plot_flag = 0;
+	this->plot_buf = "";
 }
 
 plt::gnuplot::~gnuplot() {
@@ -37,6 +38,15 @@ void plt::gnuplot::flush() {
 	if (macro_out) fflush(macro_out);
 }
 
+void plt::gnuplot::repaint() {
+	set_output(term_out);
+	send_raw(get_plot_header() + plot_buf);
+}
+
+void plt::gnuplot::clear() {
+	send_raw("clear");
+}
+
 std::string plt::gnuplot::get_plot_header() {
 	return "plot "
 			 + (RANGE_X & range_flag ? "["
@@ -56,12 +66,26 @@ std::string plt::gnuplot::get_plot_header() {
 		;
 }
 
-void plt::gnuplot::plot_function(const std::string& f) {
-	send_raw(get_plot_header() + f);
+void plt::gnuplot::plot_function(const std::string& f, const plot_meta& meta) {
+	plot_buf += (plot_buf == "" ? f : ", " + f)
+		+ (meta.has_title() ? + " title \"" + meta.get_title() + "\"" : "");
+	repaint();
+}
+
+void plt::gnuplot::plot_data(const std::string& fname, const plot_meta& meta) {
+	plot_buf += (plot_buf == "" ? "\"" + fname + "\"" : ", \"" + fname + "\"")
+		+ (meta.has_title() ? " title \"" + meta.get_title() + "\"" : "");
+	repaint();
+}
+
+void plt::gnuplot::plot_function(const std::string& func) {
+	plt::plot_meta empty_meta;
+	plot_function(func, empty_meta);
 }
 
 void plt::gnuplot::plot_data(const std::string& fname) {
-	send_raw(get_plot_header() + + "\"" + fname + "\"");
+	plt::plot_meta empty_meta;
+	plot_data(fname, empty_meta);
 }
 
 void plt::gnuplot::set_title(const std::string& s) {
@@ -76,16 +100,30 @@ void plt::gnuplot::set_ylabel(const std::string& s) {
 	send_raw("set ylabel \"" + s + "\"");
 }
 
-void plt::gnuplot::set_output(const std::string& fname, const std::string& fmt, size_t sz_x, size_t sz_y) {
+void plt::gnuplot::set_output(const plt::terminal_output& term_out) {
+	this->term_out = term_out;
+
+	// comment rest of the func body out.
 	fprintf(p, "set terminal %s size %lu,%lu; set output \"%s\"\n",
-			fmt.c_str(), sz_x, sz_y, fname.c_str()
+			term_out.fmt.c_str(),
+			term_out.sz_x,
+			term_out.sz_y,
+			term_out.fname.c_str()
 		   );
 	
 	if (macro_out) {
 		fprintf(macro_out, "set terminal %s size %lu,%lu; set output \"%s\"\n",
-			fmt.c_str(), sz_x, sz_y, fname.c_str()
-			);
+			term_out.fmt.c_str(),
+			term_out.sz_x,
+			term_out.sz_y,
+			term_out.fname.c_str()
+		   );
 	}
+}
+
+void plt::gnuplot::set_output(const std::string& fname, const std::string& fmt, size_t sz_x, size_t sz_y) {
+	plt::terminal_output term_out(fname, fmt, sz_x, sz_y);
+	set_output(term_out);
 }
 
 void plt::gnuplot::set_xrange(const plt::axis_range& r) {
@@ -129,6 +167,14 @@ void plt::gnuplot::set_logscale(const std::string& axes) {
 
 void plt::gnuplot::unset_logscale(const std::string& axes) {
 	send_raw("unset logscale " + axes);	
+}
+
+void plt::gnuplot::save_settings(const std::string& fname) {
+	send_raw("save set \"" + fname + "\"");
+}
+
+void plt::gnuplot::save_macro(const std::string& fname) {
+	send_raw("save \"" + fname + "\"");
 }
 
 
