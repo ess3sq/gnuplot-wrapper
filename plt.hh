@@ -6,12 +6,15 @@
 #include <cstdio>
 #include <cstddef>
 
-#define RANGE_X 1
-#define RANGE_Y 2
-#define RANGE_XY (RANGE_X | RANGE_Y)
+#define PLT_RANGE_X 1
+#define PLT_RANGE_Y 2
+#define PLT_RANGE_XY (RANGE_X | RANGE_Y)
 
-#define IS_PLOT(flag) ((flag) > 0)
-#define IS_SPLOT(flag) ((flag)) < 0)
+#define PLT_IS_PLOT(flag) ((flag) > 0)
+#define PLT_IS_SPLOT(flag) ((flag)) < 0)
+
+#define PLT_STYLE_
+#define PLT_STYLE_
 
 namespace plt {
 
@@ -62,28 +65,70 @@ namespace plt {
 		}
 	};
 
+	enum class plot_style {
+						   missing,
+						   lines,
+						   points,
+						   linespoints,
+						   impulses,
+						   dots,
+						   steps,
+						   errorbars,
+						   yerrorbars,
+						   xerrorbars,
+						   xyerrorbars,
+						   boxes,
+						   boxerrorbars,
+						   boxxyerrorbars
+	};
+
+	std::string value_of(const plot_style& style);
+
 	class plot_meta {
 	private:
 		std::string title;
 		bool title_is_set;
+		plot_style style;
+		
 		friend class gnuplot;
 		
 	public:
 		plot_meta() {
 			this->title_is_set = false;
+			this->style = plot_style::missing;
 		}
 
-		plot_meta(std::string title) {
+		plot_meta(const std::string& title) {
 			this->title_is_set = true;
 			this->title = title;
+			this->style = plot_style::missing;
+		}
+
+		plot_meta(const plot_style& style) {
+			this->title_is_set = false;
+			this->style = style;			
+		}
+
+		plot_meta(const std::string& title, const plot_style& style) {
+			this->title_is_set = true;
+			this->title = title;
+			this->style = style;			
 		}
 
 		bool has_title() const {
 			return title_is_set;
 		}
 
-		std::string get_title() const {
+		const std::string& get_title() const {
 			return title;
+		}
+
+		bool has_style() const {
+			return value_of(style) == value_of(plot_style::missing);
+		}
+		
+		const plot_style& get_style() const {
+			return style;
 		}
 	};
 	

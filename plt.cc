@@ -2,6 +2,45 @@
 #include <iostream>
 #include "plt.hh"
 
+// Plot style
+
+std::string plt::value_of(const plt::plot_style& style) {
+	switch(style) {
+	case plt::plot_style::missing:
+		return "";
+	case plt::plot_style::lines:
+		return "with lines";
+	case plt::plot_style::points:
+		return "with points";
+	case plt::plot_style::linespoints:
+		return "with linespoints";
+	case plt::plot_style::impulses:
+		return "with impulses";
+	case plt::plot_style::dots:
+		return "with dots";
+	case plt::plot_style::steps:
+		return "with steps";
+	case plt::plot_style::errorbars:
+		return "with errorbars";
+	case plt::plot_style::yerrorbars:
+		return "with yerrorbars";
+	case plt::plot_style::xerrorbars:
+		return "with xerrorbars";
+	case plt::plot_style::xyerrorbars:
+		return "with xyerrorbars";
+	case plt::plot_style::boxes:
+		return "with boxes";
+	case plt::plot_style::boxerrorbars:
+		return "with boxerrorbars";
+	case plt::plot_style::boxxyerrorbars:
+		return "with boxxyerrorbars";
+	}
+
+	std::cerr << "[gnuplot-wrapper] Received invalid plot_style constant!" << std::endl;
+	exit(-1);
+	return "";
+}
+
 // Gnu Plot class
 plt::gnuplot::gnuplot() {
 	init();
@@ -64,14 +103,14 @@ void plt::gnuplot::clear() {
 
 std::string plt::gnuplot::get_plot_header() {
 	return "plot "
-			 + (RANGE_X & range_flag ? "["
+			 + (PLT_RANGE_X & range_flag ? "["
 				+ std::to_string(xr.start)
 				+ ":"
 				+ std::to_string(xr.end)
 				+ "] "
 				: "[] "
 			   )
-			 + (RANGE_Y & range_flag ? "["
+			 + (PLT_RANGE_Y & range_flag ? "["
 				+ std::to_string(yr.start)
 				+ ":"
 				+ std::to_string(yr.end)
@@ -83,13 +122,17 @@ std::string plt::gnuplot::get_plot_header() {
 
 void plt::gnuplot::plot_function(const std::string& f, const plot_meta& meta) {
 	plot_buf += (plot_buf == "" ? f : ", " + f)
-		+ (meta.has_title() ? + " title \"" + meta.get_title() + "\"" : "");
+		+ (meta.has_title() ? + " title \"" + meta.get_title() + "\"" : "")
+		+ value_of(meta.get_style())
+		;
 	repaint();
 }
 
 void plt::gnuplot::plot_data(const std::string& fname, const plot_meta& meta) {
 	plot_buf += (plot_buf == "" ? "\"" + fname + "\"" : ", \"" + fname + "\"")
-		+ (meta.has_title() ? " title \"" + meta.get_title() + "\"" : "");
+		+ (meta.has_title() ? " title \"" + meta.get_title() + "\"" : "")
+		+ value_of(meta.get_style())
+		;
 	repaint();
 }
 
@@ -146,12 +189,12 @@ void plt::gnuplot::set_macro_output(FILE *macro_out) {
 
 void plt::gnuplot::set_xrange(const plt::axis_range& r) {
 	xr = r;
-	range_flag |= RANGE_X;
+	range_flag |= PLT_RANGE_X;
 }
 
 void plt::gnuplot::set_yrange(const plt::axis_range& r) {
 	yr = r;
-	range_flag |= RANGE_Y;
+	range_flag |= PLT_RANGE_Y;
 }
 
 void plt::gnuplot::set_xrange(double xstart, double xend) {
@@ -166,11 +209,11 @@ void plt::gnuplot::set_yrange(double ystart, double yend) {
 
 
 void plt::gnuplot::unset_xrange() {
-	range_flag &= ~RANGE_X;
+	range_flag &= ~ PLT_RANGE_X;
 }
 
 void plt::gnuplot::unset_yrange() {
-	range_flag &= ~RANGE_Y;
+	range_flag &= ~ PLT_RANGE_Y;
 }
 
 void plt::gnuplot::set_logscale(const std::string& axes, double base) {
