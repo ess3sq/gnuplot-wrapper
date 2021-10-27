@@ -3,19 +3,24 @@
 
 // Gnu Plot class
 plt::gnuplot::gnuplot() {
-	init(nullptr);
+	init();
 }
 
-plt::gnuplot::gnuplot(FILE *macro_out) {
-	init(macro_out);
+plt::gnuplot::gnuplot(const std::string& fname,
+						const std::string& fmt,
+						size_t sz_x,
+						size_t sz_y) {
+	
+	init();
+	set_output(fname, fmt, sz_x, sz_y);
 }
 
-void plt::gnuplot::init(FILE *macro_out) {
+void plt::gnuplot::init() {
 	this->p = popen("gnuplot", "w");
    	this->range_flag = 0;
-	this->macro_out = macro_out;
 	this->plot_flag = 0;
 	this->plot_buf = "";
+	this->macro_out = nullptr;
 }
 
 plt::gnuplot::~gnuplot() {
@@ -103,14 +108,13 @@ void plt::gnuplot::set_ylabel(const std::string& s) {
 void plt::gnuplot::set_output(const plt::terminal_output& term_out) {
 	this->term_out = term_out;
 
-	// comment rest of the func body out.
 	fprintf(p, "set terminal %s size %lu,%lu; set output \"%s\"\n",
 			term_out.fmt.c_str(),
 			term_out.sz_x,
 			term_out.sz_y,
 			term_out.fname.c_str()
 		   );
-	
+
 	if (macro_out) {
 		fprintf(macro_out, "set terminal %s size %lu,%lu; set output \"%s\"\n",
 			term_out.fmt.c_str(),
@@ -124,6 +128,10 @@ void plt::gnuplot::set_output(const plt::terminal_output& term_out) {
 void plt::gnuplot::set_output(const std::string& fname, const std::string& fmt, size_t sz_x, size_t sz_y) {
 	plt::terminal_output term_out(fname, fmt, sz_x, sz_y);
 	set_output(term_out);
+}
+
+void plt::gnuplot::set_macro_output(FILE *macro_out) {
+	this->macro_out = macro_out;
 }
 
 void plt::gnuplot::set_xrange(const plt::axis_range& r) {

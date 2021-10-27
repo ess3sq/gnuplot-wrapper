@@ -100,12 +100,13 @@ namespace plt {
 
 		plt::terminal_output term_out;
 		std::string get_plot_header();
-		
+
+		void init();
+
 	public:
 		gnuplot();
-		gnuplot(FILE *macro_out);
-		void init(FILE *macro_out);
-
+		gnuplot(const std::string& fname, const std::string& fmt, size_t sz_x, size_t sz_y);
+		
 		~gnuplot();
 		
 		void send_raw(const std::string& s);
@@ -117,6 +118,7 @@ namespace plt {
 
 		void set_output(const std::string& fname, const std::string& fmt, size_t sz_x, size_t sz_y);
 		void set_output(const plt::terminal_output& term_out);
+		void set_macro_output(FILE *macro_out);
 
 		void set_xrange(const plt::axis_range& r);
 		void set_yrange(const plt::axis_range& r);
