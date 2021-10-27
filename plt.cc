@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 #include "plt.hh"
 
@@ -13,6 +14,15 @@ plt::gnuplot::gnuplot(const std::string& fname,
 	
 	init();
 	set_output(fname, fmt, sz_x, sz_y);
+}
+
+plt::gnuplot plt::gnuplot::operator=(const plt::gnuplot& plot) {
+	return plt::gnuplot(plot); // copy c-tor
+}
+
+plt::gnuplot::gnuplot(const plt::gnuplot& plot) {
+	init();
+	this->plot_buf = plot.plot_buf;
 }
 
 void plt::gnuplot::init() {

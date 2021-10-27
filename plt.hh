@@ -106,9 +106,10 @@ namespace plt {
 	public:
 		gnuplot();
 		gnuplot(const std::string& fname, const std::string& fmt, size_t sz_x, size_t sz_y);
-		
+		gnuplot(const gnuplot& plot);
+		gnuplot operator=(const gnuplot& plot);
 		~gnuplot();
-		
+
 		void send_raw(const std::string& s);
 		void flush();
 		void repaint();
